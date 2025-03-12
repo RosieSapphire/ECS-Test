@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 
 #include "engine/ecs.h"
 
@@ -75,6 +76,23 @@ void ecs_entity_set_xclamp(struct ecs *ecs, const uint8_t id, const float min,
 	xclamp->max = max;
 }
 
+void ecs_entity_set_move(struct ecs *ecs, const uint8_t id, const float accel,
+			 const float decel, const float max_vel,
+			 const int8_t dir)
+{
+	struct comp_move *move = ecs->moves + id;
+	move->accel = accel;
+	move->decel = decel;
+	move->max_vel = max_vel;
+	move->dir = dir;
+}
+
+void ecs_entity_set_move_dir(struct ecs *ecs, const uint8_t id,
+			     const int8_t dir)
+{
+	ecs->moves[id].dir = dir;
+}
+
 void ecs_update(struct ecs *ecs, const float dt)
 {
 	for (uint8_t i = 0; i < ecs->count; i++) {
@@ -92,6 +110,26 @@ void ecs_update(struct ecs *ecs, const float dt)
 			}
 
 			struct comp_position *pos = ecs->positions + i;
+			struct comp_move *move = ecs->moves + i;
+			vel->v[0] += move->dir * move->accel * dt;
+			if (vel->v[0] > move->max_vel) {
+				vel->v[0] = move->max_vel;
+			}
+			if (vel->v[0] < -move->max_vel) {
+				vel->v[0] = -move->max_vel;
+			}
+			if (!move->dir) {
+				if (vel->v[0] > 0.f) {
+					vel->v[0] -= move->decel * dt;
+				}
+				if (vel->v[0] < 0.f) {
+					vel->v[0] += move->decel * dt;
+				}
+				if (fabsf(vel->v[0]) < 0.1f) {
+					vel->v[0] = 0.f;
+				}
+			}
+
 			pos->v[0] += vel->v[0];
 			pos->v[1] += vel->v[1];
 

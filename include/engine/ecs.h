@@ -11,6 +11,7 @@ enum {
 	ENT_FLAG_COMP_FLOOR_COLL = (1 << 4),
 	ENT_FLAG_COMP_JUMP = (1 << 5),
 	ENT_FLAG_COMP_XCLAMP = (1 << 6),
+	ENT_FLAG_COMP_MOVE = (1 << 7),
 };
 
 #define ENTITY_MAX_COUNT 256
@@ -41,6 +42,13 @@ struct comp_xclamp {
 	float max;
 };
 
+struct comp_move {
+	float accel;
+	float decel;
+	float max_vel;
+	int8_t dir;
+};
+
 struct ecs {
 	uint32_t flags[ENTITY_MAX_COUNT];
 	struct comp_position positions[ENTITY_MAX_COUNT];
@@ -49,6 +57,7 @@ struct ecs {
 	struct comp_floor_coll floor_colls[ENTITY_MAX_COUNT];
 	struct comp_jump jumps[ENTITY_MAX_COUNT];
 	struct comp_xclamp xclamps[ENTITY_MAX_COUNT];
+	struct comp_move moves[ENTITY_MAX_COUNT];
 	uint8_t count;
 };
 
@@ -69,6 +78,11 @@ void ecs_entity_set_jump_condition(struct ecs *ecs, const uint8_t id,
 				   const bool jump_cond);
 void ecs_entity_set_xclamp(struct ecs *ecs, const uint8_t id, const float min,
 			   const float max);
+void ecs_entity_set_move(struct ecs *ecs, const uint8_t id, const float accel,
+			 const float decel, const float max_vel,
+			 const int8_t dir);
+void ecs_entity_set_move_dir(struct ecs *ecs, const uint8_t id,
+			     const int8_t dir);
 void ecs_update(struct ecs *ecs, const float dt);
 /* TODO: There is currently no way to remove entities from the list */
 void ecs_free(struct ecs *ecs);

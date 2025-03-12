@@ -15,7 +15,7 @@ struct level level_init(void)
 void level_update(struct level *lvl, const joypad_buttons_t btn_press,
 		  joypad_buttons_t btn_held, const float dt)
 {
-	player_update(&lvl->player, &lvl->ecs, btn_press, btn_held, dt);
+	player_update(&lvl->player, &lvl->ecs, btn_press, btn_held);
 	ecs_update(&lvl->ecs, dt);
 }
 

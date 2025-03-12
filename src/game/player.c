@@ -21,7 +21,7 @@ struct player player_init(struct ecs *ecs)
 		ecs, ENT_FLAG_IS_ACTIVE | ENT_FLAG_COMP_POS |
 			     ENT_FLAG_COMP_VEL | ENT_FLAG_COMP_GRAV |
 			     ENT_FLAG_COMP_FLOOR_COLL | ENT_FLAG_COMP_JUMP |
-			     ENT_FLAG_COMP_XCLAMP);
+			     ENT_FLAG_COMP_XCLAMP | ENT_FLAG_COMP_MOVE);
 	ecs_entity_set_position(ecs, p.ent_id,
 				(float[2]){ 100.f, PLAYER_FLOOR_HEIGHT });
 	ecs_entity_set_velocity(ecs, p.ent_id, (float[2]){ 0.f, 0.f });
@@ -29,44 +29,27 @@ struct player player_init(struct ecs *ecs)
 	ecs_entity_set_floor_coll(ecs, p.ent_id, PLAYER_FLOOR_HEIGHT);
 	ecs_entity_set_jump_force(ecs, p.ent_id, PLAYER_JUMP_VEL);
 	ecs_entity_set_xclamp(ecs, p.ent_id, 0.f, 320.f - PLAYER_WIDTH_PXLS);
+	ecs_entity_set_move(ecs, p.ent_id, PLAYER_ACCEL, PLAYER_DECEL,
+			    PLAYER_MOVE_VEL_MAX, 0);
 
 	return p;
 }
 
 void player_update(struct player *p, struct ecs *ecs,
 		   const joypad_buttons_t btn_press,
-		   const joypad_buttons_t btn_held, const float dt)
+		   const joypad_buttons_t btn_held)
 {
-	/* floor move */
-	const int move_dir = (btn_held.d_right - btn_held.d_left);
-	struct comp_velocity *vel = ecs->velocities + p->ent_id;
-	vel->v[0] += move_dir * PLAYER_ACCEL * dt;
-	if (vel->v[0] > PLAYER_MOVE_VEL_MAX) {
-		vel->v[0] = PLAYER_MOVE_VEL_MAX;
-	}
-	if (vel->v[0] < -PLAYER_MOVE_VEL_MAX) {
-		vel->v[0] = -PLAYER_MOVE_VEL_MAX;
-	}
-	if (!move_dir) {
-		if (vel->v[0] > 0.f) {
-			vel->v[0] -= PLAYER_DECEL * dt;
-		}
-		if (vel->v[0] < 0.f) {
-			vel->v[0] += PLAYER_DECEL * dt;
-		}
-		if (fabsf(vel->v[0]) < 0.1f) {
-			vel->v[0] = 0.f;
-		}
-	}
+	ecs_entity_set_jump_condition(ecs, p->ent_id, btn_press.a);
+	ecs_entity_set_move_dir(ecs, p->ent_id,
+				btn_held.d_right - btn_held.d_left);
 
 	/* facing dir */
+	const struct comp_velocity *vel = ecs->velocities + p->ent_id;
 	if (vel->v[0] > 0.f) {
 		p->is_facing_left = false;
 	} else if (vel->v[0] < 0.f) {
 		p->is_facing_left = true;
 	}
-
-	ecs_entity_set_jump_condition(ecs, p->ent_id, btn_press.a);
 }
 
 void player_render(const struct player *p, const struct ecs *ecs)
