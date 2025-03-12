@@ -5,7 +5,7 @@
 #include "engine/ecs.h"
 
 struct player {
-	uint32_t ent_id;
+	uint8_t ent_id;
 	bool is_facing_left;
 };
 

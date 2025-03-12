@@ -8,6 +8,7 @@ struct level level_init(void)
 
 	lvl.ecs = ecs_init();
 	lvl.player = player_init(&lvl.ecs);
+	lvl.testblock = testblock_init(&lvl.ecs);
 
 	return lvl;
 }
@@ -24,10 +25,12 @@ void level_render(const struct level *lvl)
 	rdpq_set_mode_standard();
 	rdpq_mode_alphacompare(1);
 	player_render(&lvl->player, &lvl->ecs);
+	testblock_render(&lvl->testblock, &lvl->ecs);
 }
 
 void level_free(struct level *lvl)
 {
+	testblock_free(&lvl->testblock);
 	player_free(&lvl->player);
 	ecs_free(&lvl->ecs);
 }

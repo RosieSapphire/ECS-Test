@@ -5,10 +5,12 @@
 #include "engine/ecs.h"
 
 #include "game/player.h"
+#include "game/testblock.h"
 
 struct level {
 	struct ecs ecs;
 	struct player player;
+	struct testblock testblock;
 };
 
 struct level level_init(void);
