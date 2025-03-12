@@ -51,9 +51,12 @@ void ecs_entity_set_gravity(struct ecs *ecs, const uint8_t id,
 }
 
 void ecs_entity_set_floor_coll(struct ecs *ecs, const uint8_t id,
-			       const float floor_coll_height)
+			       const float floor_coll_height,
+			       const float entity_height)
 {
-	ecs->floor_colls[id].height = floor_coll_height;
+	struct comp_floor_coll *fcoll = ecs->floor_colls + id;
+	fcoll->floor_height = floor_coll_height;
+	fcoll->ent_height = entity_height;
 }
 
 void ecs_entity_set_jump_force(struct ecs *ecs, const uint8_t id,
@@ -136,8 +139,10 @@ void ecs_update(struct ecs *ecs, const float dt)
 			const struct comp_floor_coll *fcoll =
 				ecs->floor_colls + i;
 			if (flags & ENT_FLAG_COMP_FLOOR_COLL) {
-				if (pos->v[1] > fcoll->height) {
-					pos->v[1] = fcoll->height;
+				if (pos->v[1] >
+				    fcoll->floor_height - fcoll->ent_height) {
+					pos->v[1] = fcoll->floor_height -
+						    fcoll->ent_height;
 					vel->v[1] = 0.f;
 				}
 			}
@@ -145,7 +150,8 @@ void ecs_update(struct ecs *ecs, const float dt)
 			if (flags & ENT_FLAG_COMP_JUMP) {
 				const struct comp_jump *jump = ecs->jumps + i;
 				if (jump->cond &&
-				    (pos->v[1] >= fcoll->height)) {
+				    (pos->v[1] >=
+				     fcoll->floor_height - fcoll->ent_height)) {
 					vel->v[1] = -jump->force;
 				}
 			}

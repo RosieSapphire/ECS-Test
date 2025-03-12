@@ -8,6 +8,7 @@
 #define PLAYER_MOVE_VEL_MAX 3.f
 #define PLAYER_GRAVITY 4.f
 #define PLAYER_WIDTH_PXLS 29
+#define PLAYER_HEIGHT_PXLS 26
 
 static sprite_t *spr_player;
 
@@ -26,7 +27,8 @@ struct player player_init(struct ecs *ecs)
 				(float[2]){ 100.f, PLAYER_FLOOR_HEIGHT });
 	ecs_entity_set_velocity(ecs, p.ent_id, (float[2]){ 0.f, 0.f });
 	ecs_entity_set_gravity(ecs, p.ent_id, PLAYER_GRAVITY);
-	ecs_entity_set_floor_coll(ecs, p.ent_id, PLAYER_FLOOR_HEIGHT);
+	ecs_entity_set_floor_coll(ecs, p.ent_id, PLAYER_FLOOR_HEIGHT,
+				  PLAYER_HEIGHT_PXLS);
 	ecs_entity_set_jump_force(ecs, p.ent_id, PLAYER_JUMP_VEL);
 	ecs_entity_set_xclamp(ecs, p.ent_id, 0.f, 320.f - PLAYER_WIDTH_PXLS);
 	ecs_entity_set_move(ecs, p.ent_id, PLAYER_ACCEL, PLAYER_DECEL,

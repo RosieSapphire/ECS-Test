@@ -9,14 +9,13 @@ struct testblock testblock_init(struct ecs *ecs)
 	spr_testblock = sprite_load("rom:/SPR.TestBlock.ci8.sprite");
 
 	struct testblock tb;
-	tb.ent_id = ecs_entity_add(
-		ecs, ENT_FLAG_IS_ACTIVE | ENT_FLAG_COMP_POS |
-			     ENT_FLAG_COMP_VEL | ENT_FLAG_COMP_GRAV |
-			     ENT_FLAG_COMP_FLOOR_COLL | ENT_FLAG_COMP_MOVE);
+	tb.ent_id = ecs_entity_add(ecs, ENT_FLAG_IS_ACTIVE | ENT_FLAG_COMP_POS |
+						ENT_FLAG_COMP_VEL |
+						ENT_FLAG_COMP_GRAV |
+						ENT_FLAG_COMP_FLOOR_COLL);
 	ecs_entity_set_position(ecs, tb.ent_id, (float[2]){ 198, 53 });
 	ecs_entity_set_gravity(ecs, tb.ent_id, 3.f);
-	ecs_entity_set_floor_coll(ecs, tb.ent_id, 184.f);
-	ecs_entity_set_move(ecs, tb.ent_id, 1.f, 1.f, 3.f, -1);
+	ecs_entity_set_floor_coll(ecs, tb.ent_id, 184.f, 16.f);
 
 	return tb;
 }

@@ -29,7 +29,8 @@ struct comp_gravity {
 };
 
 struct comp_floor_coll {
-	float height;
+	float floor_height;
+	float ent_height;
 };
 
 struct comp_jump {
@@ -71,7 +72,8 @@ void ecs_entity_set_velocity(struct ecs *ecs, const uint8_t id,
 void ecs_entity_set_gravity(struct ecs *ecs, const uint8_t id,
 			    const float gravity_force);
 void ecs_entity_set_floor_coll(struct ecs *ecs, const uint8_t id,
-			       const float floor_coll_height);
+			       const float floor_coll_height,
+			       const float entity_height);
 void ecs_entity_set_jump_force(struct ecs *ecs, const uint8_t id,
 			       const float jump_force);
 void ecs_entity_set_jump_condition(struct ecs *ecs, const uint8_t id,
