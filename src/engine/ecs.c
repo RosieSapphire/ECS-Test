@@ -5,15 +5,12 @@
 struct ecs ecs_init(void)
 {
 	struct ecs ecs;
-	ecs.count = 0;
-	memset(ecs.flags, 0, ENTITY_MAX_COUNT * sizeof(*ecs.flags));
-	memset(ecs.positions, 0, ENTITY_MAX_COUNT * sizeof(*ecs.positions));
-	memset(ecs.velocities, 0, ENTITY_MAX_COUNT * sizeof(*ecs.velocities));
+	memset(&ecs, 0, sizeof(ecs));
 
 	return ecs;
 }
 
-uint8_t ecs_entity_add(struct ecs *ecs, const uint8_t flags)
+uint8_t ecs_entity_add(struct ecs *ecs, const uint32_t flags)
 {
 	uint8_t id = ecs->count++;
 	ecs->flags[id] = flags;
@@ -64,25 +61,33 @@ void ecs_entity_set_jump_force(struct ecs *ecs, const uint8_t id,
 	ecs->jumps[id].force = jump_force;
 }
 
-void ecs_entity_update_jump_cond(struct ecs *ecs, const uint8_t id,
-				 const uint8_t jump_cond)
+void ecs_entity_set_jump_condition(struct ecs *ecs, const uint8_t id,
+				   const bool jump_cond)
 {
 	ecs->jumps[id].cond = jump_cond;
+}
+
+void ecs_entity_set_xclamp(struct ecs *ecs, const uint8_t id, const float min,
+			   const float max)
+{
+	struct comp_xclamp *xclamp = ecs->xclamps + id;
+	xclamp->min = min;
+	xclamp->max = max;
 }
 
 void ecs_update(struct ecs *ecs, const float dt)
 {
 	for (uint8_t i = 0; i < ecs->count; i++) {
-		uint8_t *flags = ecs->flags + i;
-		if (!(*flags & ENT_FLAG_IS_ACTIVE)) {
+		const uint32_t flags = ecs->flags[i];
+		if (!(flags & ENT_FLAG_IS_ACTIVE)) {
 			continue;
 		}
 
-		if ((*flags & ENT_FLAG_COMP_VEL) &&
-		    (*flags & ENT_FLAG_COMP_POS)) {
+		if ((flags & ENT_FLAG_COMP_VEL) &&
+		    (flags & ENT_FLAG_COMP_POS)) {
 			struct comp_velocity *vel = ecs->velocities + i;
 			const struct comp_gravity *grav = ecs->gravities + i;
-			if (*flags & ENT_FLAG_COMP_GRAV) {
+			if (flags & ENT_FLAG_COMP_GRAV) {
 				vel->v[1] += grav->force * dt;
 			}
 
@@ -92,18 +97,36 @@ void ecs_update(struct ecs *ecs, const float dt)
 
 			const struct comp_floor_coll *fcoll =
 				ecs->floor_colls + i;
-			if (*flags & ENT_FLAG_COMP_FLOOR_COLL) {
+			if (flags & ENT_FLAG_COMP_FLOOR_COLL) {
 				if (pos->v[1] > fcoll->height) {
 					pos->v[1] = fcoll->height;
 					vel->v[1] = 0.f;
 				}
 			}
 
-			if (*flags & ENT_FLAG_COMP_JUMP) {
+			if (flags & ENT_FLAG_COMP_JUMP) {
 				const struct comp_jump *jump = ecs->jumps + i;
-				if (jump->cond & 1 &&
+				if (jump->cond &&
 				    (pos->v[1] >= fcoll->height)) {
 					vel->v[1] = -jump->force;
+				}
+			}
+
+			if (flags & ENT_FLAG_COMP_XCLAMP) {
+				const struct comp_xclamp *xclamp =
+					ecs->xclamps + i;
+				const bool too_low = (pos->v[0] < xclamp->min);
+				if (too_low) {
+					pos->v[0] = xclamp->min;
+				}
+
+				const bool too_high = (pos->v[0] > xclamp->max);
+				if (too_high) {
+					pos->v[0] = xclamp->max;
+				}
+
+				if (too_high || too_low) {
+					vel->v[0] = 0.f;
 				}
 			}
 		}
@@ -112,8 +135,5 @@ void ecs_update(struct ecs *ecs, const float dt)
 
 void ecs_free(struct ecs *ecs)
 {
-	ecs->count = 0;
-	memset(ecs->flags, 0, ENTITY_MAX_COUNT * sizeof(*ecs->flags));
-	memset(ecs->positions, 0, ENTITY_MAX_COUNT * sizeof(*ecs->positions));
-	memset(ecs->velocities, 0, ENTITY_MAX_COUNT * sizeof(*ecs->velocities));
+	memset(ecs, 0, sizeof(*ecs));
 }
